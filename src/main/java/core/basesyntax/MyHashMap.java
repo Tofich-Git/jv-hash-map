@@ -23,14 +23,20 @@ public class MyHashMap<K, V> implements MyMap<K, V> {
     private boolean hasNullKey;
 
     public MyHashMap() {
-        this.buckets = new LinkedList[capacity];
         this.capacity = INITIAL_CAPACITY;
+        this.buckets = createBucketArray(capacity);
         this.hasNullKey = false;
         this.size = 0;
     }
 
-    private int getBucketsIndex(K key) {
-        return Math.abs(key.hashCode() % capacity);
+    private LinkedList<Entry<K, V>>[] createBucketArray(int capacity) {
+        return (LinkedList<Entry<K, V>>[]) new LinkedList[capacity];
+    }
+
+    private int getBucketIndex(K key) {
+        int hash = key.hashCode();
+        int index = hash % capacity;
+        return index < 0 ? index + capacity : index;
     }
 
     @Override
@@ -43,7 +49,8 @@ public class MyHashMap<K, V> implements MyMap<K, V> {
             hasNullKey = true;
             return;
         }
-        int index = getBucketsIndex(key);
+        int index = getBucketIndex(key);
+
         if (buckets[index] == null) {
             buckets[index] = new LinkedList<>();
         }
@@ -65,7 +72,8 @@ public class MyHashMap<K, V> implements MyMap<K, V> {
         if (key == null) {
             return hasNullKey ? nullKeyValue : null;
         }
-        int index = getBucketsIndex(key);
+        int index = getBucketIndex(key);
+        LinkedList<Entry<K, V>> bucket = buckets[index];
         if (buckets[index] != null) {
             for (Entry<K, V> entry : buckets[index]) {
                 if (entry.key.equals(key)) {
@@ -84,7 +92,7 @@ public class MyHashMap<K, V> implements MyMap<K, V> {
     public void resize() {
         capacity *= 2;
         LinkedList<Entry<K, V>>[] oldBuckets = buckets;
-        buckets = new LinkedList[capacity];
+        buckets = createBucketArray(capacity);
         size = hasNullKey ? 1 : 0;
 
         for (LinkedList<Entry<K, V>> bucket : oldBuckets) {
